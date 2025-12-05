@@ -1,0 +1,95 @@
+You are an expert mobile app architect and you will generate a complete mobile app called "Social Media Exposure Analyzer".
+
+The app must be fully working from A–Z and include all screens, UI layout, data flow, and backend logic using AppyPie mobile app builder.
+
+=====================
+APP PURPOSE
+=====================
+This app analyzes public information from social media profiles to detect privacy leaks.
+
+User inputs:
+- Facebook profile link
+- Instagram profile link
+- TikTok profile link
+
+App features:
+1. Public Information Scanner
+2. Exposure Analyzer
+3. Risk Score Calculator
+4. Privacy Recommendations
+5. History of previous analyses
+
+=====================
+FEATURE DETAILS
+=====================
+
+1. Public Information Scanner:
+- Extract public data from the given URL.
+- Collect: username, bio, email, phone number (if visible as text), follower count, images (thumbnails), captions.
+- For images: app only processes text and metadata.
+
+2. Exposure Analyzer:
+- OCR on images to detect: phone numbers, emails, addresses, license plates.
+- Detect sensitive words from captions: "CCCD", "passport", "address", "home", "school".
+- Count number of faces in each image using lightweight on-device detection (or simulated detection).
+- Extract EXIF metadata (GPS if available).
+
+3. Risk Score Calculation:
+Score = Identity Exposure + Contact Exposure + Location Exposure + Visual Sensitive Exposure.
+Ranges:
+- 0–20 Low
+- 21–50 Medium
+- 51–75 High
+- 76–100 Critical
+
+4. Privacy Recommendations:
+Based on findings, show:
+- "Remove phone number from bio"
+- "Avoid showing ID card"
+- "Turn off location in photos"
+- "Set account to private"
+- "Hide posts containing sensitive information"
+
+5. Full UI screens:
+- Home screen (Input URL)
+- Analyze result screen
+- Risk Score gauge screen
+- Sensitive image findings
+- EXIF data findings
+- Privacy tips screen
+- App settings
+- History of scans
+
+6. Export report:
+- Generate downloadable PDF summary of findings.
+
+=====================
+APP REQUIREMENTS
+=====================
+- Auto-generate UI with clean layout.
+- Auto-generate data fields.
+- Use no paid API.
+- Use only public-web scraping through AppyPie workflow.
+- Simulate image analyzer using text-based OCR extraction.
+- Must run fully local inside AppyPie builder.
+
+=====================
+DELIVERABLES
+=====================
+Generate:
+- Full app structure
+- All screens
+- All navigation
+- All data tables
+- All workflows
+- All logic rules
+- Fake API connectors if needed
+- UI components
+- Buttons, forms, lists, images, score meter
+
+=====================
+IMPORTANT
+=====================
+Do NOT ask additional questions.  
+Do NOT simplify the app.  
+Generate everything automatically.  

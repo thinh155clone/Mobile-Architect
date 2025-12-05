@@ -1,0 +1,78 @@
+You are an expert full-stack engineer. Convert this Mobile Architect project into a FULL STACK project by automatically generating a backend inside the same Replit workspace.
+
+========================
+GOAL
+========================
+Add a working backend inside the current project so the Social Media Exposure Analyzer app can call REAL API endpoints instead of mock data.
+
+========================
+BACKEND REQUIREMENTS
+========================
+
+1. Create a folder named: backend/
+
+2. Inside backend/, create:
+   - server.js  (Node.js + Express)
+   - routes/
+   - services/
+   - data/
+   - utils/
+
+3. Implement these API endpoints:
+
+   POST /api/analyze
+      Input: { url: string }
+      Output (JSON):
+      {
+         riskScore: number,
+         leaks: [string],
+         findings: {
+            phones: [string],
+            emails: [string],
+            faces: number,
+            gps: string | null
+         },
+         recommendations: [string]
+      }
+
+   GET /api/history
+      Return stored past scans from a JSON file inside backend/data/history.json
+
+   GET /api/report/:id
+      Return a PDF report (auto-generate simple PDF in backend/utils/pdf.js)
+
+4. Add a Risk Score Engine in backend/services/riskEngine.js
+   Logic:
+      - points for phone numbers detected
+      - points for emails detected
+      - points for faces
+      - points for GPS exposure
+      Total 0–100
+
+5. Data storage
+   Use JSON files, no external database:
+      backend/data/history.json
+
+6. Start Script
+   Modify Replit Run configuration so:
+      npm run dev = concurrently frontend + backend
+   Create scripts inside package.json:
+      "dev": "concurrently \"npm run start-frontend\" \"npm run start-backend\"",
+      "start-frontend": "vite",
+      "start-backend": "node backend/server.js"
+
+7. CORS
+   Enable CORS so frontend can call backend during local development.
+
+8. Connect Frontend → Backend
+   Inside frontend logic, replace mock data with fetch("http://localhost:5000/api/analyze", ...).
+
+========================
+RULES
+========================
+- Do NOT ask questions.
+- Generate code automatically.
+- Modify files as needed.
+- Ensure backend starts correctly.
+- Ensure frontend works with real API calls.
+- Show me a summary of everything you created when finished.

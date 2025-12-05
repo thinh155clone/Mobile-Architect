@@ -1,38 +1,36 @@
-import { type User, type InsertUser } from "@shared/schema";
-import { randomUUID } from "crypto";
+import { drizzle } from "drizzle-orm/node-postgres";
+import pg from "pg";
+import { scans, type Scan, type InsertScan } from "@shared/schema";
+import { desc, eq } from "drizzle-orm";
 
-// modify the interface with any CRUD methods
-// you might need
+const { Pool } = pg;
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
+
+const db = drizzle(pool);
 
 export interface IStorage {
-  getUser(id: string): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  createScan(scan: InsertScan): Promise<Scan>;
+  getAllScans(): Promise<Scan[]>;
+  getScan(id: string): Promise<Scan | undefined>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-
-  constructor() {
-    this.users = new Map();
+export class DatabaseStorage implements IStorage {
+  async createScan(insertScan: InsertScan): Promise<Scan> {
+    const [scan] = await db.insert(scans).values(insertScan).returning();
+    return scan;
   }
 
-  async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+  async getAllScans(): Promise<Scan[]> {
+    return await db.select().from(scans).orderBy(desc(scans.scannedAt));
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
-  }
-
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
-    return user;
+  async getScan(id: string): Promise<Scan | undefined> {
+    const [scan] = await db.select().from(scans).where(eq(scans.id, id));
+    return scan;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();

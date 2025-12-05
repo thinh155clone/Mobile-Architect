@@ -19,13 +19,15 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScoreGauge } from "@/components/ui/score-gauge";
 import { analyzeProfile, type AnalysisResult } from "@/lib/mock-api";
+import { createScan } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import type { Scan } from "@shared/schema";
 
 export default function Analysis() {
   const [location, setLocation] = useLocation();
   const [loading, setLoading] = useState(true);
   const [scanStep, setScanStep] = useState(0);
-  const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [result, setResult] = useState<Scan | null>(null);
 
   // Parse query params
   const searchParams = new URLSearchParams(window.location.search);
@@ -56,12 +58,18 @@ export default function Analysis() {
       }
     }, 600);
 
-    // Fetch data
-    analyzeProfile(url, platform).then((data) => {
-      setResult(data);
-      clearInterval(interval);
-      // Add a small delay after data is ready before showing UI to let animation finish
-      setTimeout(() => setLoading(false), 800);
+    // Fetch data and save to database
+    analyzeProfile(url, platform).then(async (data) => {
+      try {
+        const savedScan = await createScan(data);
+        setResult(savedScan);
+        clearInterval(interval);
+        setTimeout(() => setLoading(false), 800);
+      } catch (error) {
+        console.error("Failed to save scan:", error);
+        clearInterval(interval);
+        setLoading(false);
+      }
     });
 
     return () => clearInterval(interval);
@@ -142,7 +150,7 @@ export default function Analysis() {
         <ScoreGauge score={result.riskScore} />
         
         <div className="mt-6 flex items-center gap-3 px-4 py-1.5 rounded-full bg-card border border-white/10">
-          <img src={result.avatarUrl} className="w-6 h-6 rounded-full ring-1 ring-white/20" alt="Avatar" />
+          {result.avatarUrl && <img src={result.avatarUrl} className="w-6 h-6 rounded-full ring-1 ring-white/20" alt="Avatar" />}
           <span className="text-sm font-medium text-foreground">@{result.username}</span>
         </div>
       </div>

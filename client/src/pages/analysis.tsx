@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { 
   AlertTriangle, 
   CheckCircle, 
@@ -12,16 +12,15 @@ import {
   Smartphone, 
   User,
   ScanLine,
-  Download
+  Download,
+  Mail
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScoreGauge } from "@/components/ui/score-gauge";
-import { analyzeProfile, type AnalysisResult } from "@/lib/mock-api";
-import { createScan } from "@/lib/api";
+import { analyzeProfile, getReportUrl, type Scan } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import type { Scan } from "@shared/schema";
 
 export default function Analysis() {
   const [location, setLocation] = useLocation();
@@ -29,7 +28,6 @@ export default function Analysis() {
   const [scanStep, setScanStep] = useState(0);
   const [result, setResult] = useState<Scan | null>(null);
 
-  // Parse query params
   const searchParams = new URLSearchParams(window.location.search);
   const url = searchParams.get("url") || "";
   const platform = searchParams.get("platform") || "instagram";
@@ -40,7 +38,6 @@ export default function Analysis() {
       return;
     }
 
-    // Scanning simulation sequence
     const steps = [
       "Connecting to public profile...",
       "Extracting bio and metadata...",
@@ -56,20 +53,16 @@ export default function Analysis() {
         currentStep++;
         setScanStep(currentStep);
       }
-    }, 600);
+    }, 500);
 
-    // Fetch data and save to database
-    analyzeProfile(url, platform).then(async (data) => {
-      try {
-        const savedScan = await createScan(data);
-        setResult(savedScan);
-        clearInterval(interval);
-        setTimeout(() => setLoading(false), 800);
-      } catch (error) {
-        console.error("Failed to save scan:", error);
-        clearInterval(interval);
-        setLoading(false);
-      }
+    analyzeProfile(url, platform).then((data) => {
+      setResult(data);
+      clearInterval(interval);
+      setTimeout(() => setLoading(false), 600);
+    }).catch((error) => {
+      console.error("Analysis failed:", error);
+      clearInterval(interval);
+      setLoading(false);
     });
 
     return () => clearInterval(interval);
@@ -104,7 +97,7 @@ export default function Analysis() {
                 className="h-full bg-primary"
                 initial={{ width: "0%" }}
                 animate={{ width: "100%" }}
-                transition={{ duration: 4, ease: "linear" }}
+                transition={{ duration: 3.5, ease: "linear" }}
               />
             </div>
             <p className="text-xs font-mono text-primary text-center h-4">
@@ -130,11 +123,24 @@ export default function Analysis() {
     );
   }
 
-  if (!result) return null;
+  if (!result) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center p-8">
+        <p className="text-muted-foreground">Analysis failed. Please try again.</p>
+        <Button onClick={() => setLocation("/")} className="mt-4">Go Back</Button>
+      </div>
+    );
+  }
+
+  const findingsList = [
+    ...(result.findings.phones?.map((p) => ({ id: `phone-${p}`, type: "phone" as const, value: p, location: "Bio / Posts", severity: "Critical" as const })) || []),
+    ...(result.findings.emails?.map((e) => ({ id: `email-${e}`, type: "email" as const, value: e, location: "Bio / Posts", severity: "High" as const })) || []),
+    ...(result.findings.faces > 0 ? [{ id: "faces", type: "face" as const, value: `${result.findings.faces} face(s) detected`, location: "Photos", severity: "Medium" as const }] : []),
+    ...(result.findings.gps ? [{ id: "gps", type: "location" as const, value: result.findings.gps, location: "Image Metadata", severity: "High" as const }] : []),
+  ];
 
   return (
     <div className="min-h-full flex flex-col bg-background pb-24">
-      {/* Header */}
       <div className="sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-white/5 p-4 flex items-center justify-between">
         <Button variant="ghost" size="icon" onClick={() => setLocation("/")} className="h-8 w-8 -ml-2">
           <ChevronLeft className="w-5 h-5" />
@@ -145,7 +151,6 @@ export default function Analysis() {
         </Button>
       </div>
 
-      {/* Score Section */}
       <div className="p-8 flex flex-col items-center justify-center relative bg-gradient-to-b from-primary/5 to-transparent">
         <ScoreGauge score={result.riskScore} />
         
@@ -155,7 +160,6 @@ export default function Analysis() {
         </div>
       </div>
 
-      {/* Content Tabs */}
       <Tabs defaultValue="overview" className="w-full px-4">
         <TabsList className="w-full grid grid-cols-3 h-11 bg-muted/50 p-1 rounded-xl">
           <TabsTrigger value="overview" className="rounded-lg text-xs">Overview</TabsTrigger>
@@ -163,7 +167,6 @@ export default function Analysis() {
           <TabsTrigger value="actions" className="rounded-lg text-xs">Actions</TabsTrigger>
         </TabsList>
 
-        {/* OVERVIEW TAB */}
         <TabsContent value="overview" className="space-y-4 mt-4 animate-in slide-in-from-bottom-4 duration-500">
           <div className="grid grid-cols-2 gap-3">
             <Card className="p-4 bg-card/50 border-white/5 flex flex-col items-center justify-center gap-2 hover:bg-card/80 transition-colors">
@@ -176,7 +179,7 @@ export default function Analysis() {
             <Card className="p-4 bg-card/50 border-white/5 flex flex-col items-center justify-center gap-2 hover:bg-card/80 transition-colors">
               <AlertTriangle className="w-5 h-5 text-orange-400" />
               <div className="text-center">
-                <span className="block text-2xl font-bold">{result.findings.length}</span>
+                <span className="block text-2xl font-bold">{result.leaks.length}</span>
                 <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Leaks</span>
               </div>
             </Card>
@@ -187,50 +190,58 @@ export default function Analysis() {
             <p className="text-xs text-muted-foreground leading-relaxed">
               Your profile has a <span className={cn("font-bold", 
                 result.riskLevel === 'Critical' ? "text-red-500" : 
-                result.riskLevel === 'High' ? "text-orange-500" : "text-green-500"
+                result.riskLevel === 'High' ? "text-orange-500" : 
+                result.riskLevel === 'Medium' ? "text-yellow-500" : "text-green-500"
               )}>{result.riskLevel}</span> exposure level. 
-              Publicly accessible data includes personal contact info and location patterns.
+              {result.leaks.length > 0 ? " Detected issues: " + result.leaks.join(", ") + "." : " No significant issues detected."}
             </p>
           </Card>
 
-          <Button className="w-full gap-2" variant="outline">
-            <Download className="w-4 h-4" />
-            Download PDF Report
-          </Button>
+          <a href={getReportUrl(result.id)} download className="block">
+            <Button className="w-full gap-2" variant="outline">
+              <Download className="w-4 h-4" />
+              Download PDF Report
+            </Button>
+          </a>
         </TabsContent>
 
-        {/* FINDINGS TAB */}
         <TabsContent value="findings" className="space-y-3 mt-4 animate-in slide-in-from-bottom-4 duration-500">
-          {result.findings.map((finding) => (
-            <Card key={finding.id} className="p-4 flex items-start gap-3 bg-card/50 border-white/5 overflow-hidden relative group">
-              <div className={cn("absolute left-0 top-0 bottom-0 w-1", 
-                finding.severity === 'Critical' ? "bg-red-500" : 
-                finding.severity === 'High' ? "bg-orange-500" : "bg-yellow-500"
-              )} />
-              
-              <div className="p-2 bg-muted rounded-full shrink-0">
-                {finding.type === 'phone' && <Smartphone className="w-4 h-4 text-foreground" />}
-                {finding.type === 'location' && <MapPin className="w-4 h-4 text-foreground" />}
-                {finding.type === 'face' && <User className="w-4 h-4 text-foreground" />}
-                {finding.type === 'sensitive_word' && <FileText className="w-4 h-4 text-foreground" />}
-              </div>
-
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{finding.type}</span>
-                  <span className={cn("text-[10px] px-1.5 py-0.5 rounded font-medium",
-                    finding.severity === 'Critical' ? "bg-red-500/10 text-red-500" : 
-                    finding.severity === 'High' ? "bg-orange-500/10 text-orange-500" : "bg-yellow-500/10 text-yellow-500"
-                  )}>{finding.severity}</span>
-                </div>
-                <p className="text-sm font-medium truncate">{finding.value}</p>
-                <p className="text-xs text-muted-foreground mt-1">Found in: {finding.location}</p>
-              </div>
+          {findingsList.length === 0 ? (
+            <Card className="p-6 bg-card/50 border-white/5 text-center">
+              <CheckCircle className="w-8 h-8 text-green-500 mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">No sensitive data detected!</p>
             </Card>
-          ))}
+          ) : (
+            findingsList.map((finding) => (
+              <Card key={finding.id} className="p-4 flex items-start gap-3 bg-card/50 border-white/5 overflow-hidden relative group">
+                <div className={cn("absolute left-0 top-0 bottom-0 w-1", 
+                  finding.severity === 'Critical' ? "bg-red-500" : 
+                  finding.severity === 'High' ? "bg-orange-500" : "bg-yellow-500"
+                )} />
+                
+                <div className="p-2 bg-muted rounded-full shrink-0">
+                  {finding.type === 'phone' && <Smartphone className="w-4 h-4 text-foreground" />}
+                  {finding.type === 'email' && <Mail className="w-4 h-4 text-foreground" />}
+                  {finding.type === 'location' && <MapPin className="w-4 h-4 text-foreground" />}
+                  {finding.type === 'face' && <User className="w-4 h-4 text-foreground" />}
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{finding.type}</span>
+                    <span className={cn("text-[10px] px-1.5 py-0.5 rounded font-medium",
+                      finding.severity === 'Critical' ? "bg-red-500/10 text-red-500" : 
+                      finding.severity === 'High' ? "bg-orange-500/10 text-orange-500" : "bg-yellow-500/10 text-yellow-500"
+                    )}>{finding.severity}</span>
+                  </div>
+                  <p className="text-sm font-medium truncate">{finding.value}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Found in: {finding.location}</p>
+                </div>
+              </Card>
+            ))
+          )}
         </TabsContent>
 
-        {/* ACTIONS TAB */}
         <TabsContent value="actions" className="space-y-3 mt-4 animate-in slide-in-from-bottom-4 duration-500">
           {result.recommendations.map((rec, i) => (
             <Card key={i} className="p-4 flex gap-3 items-center bg-card/50 border-white/5">

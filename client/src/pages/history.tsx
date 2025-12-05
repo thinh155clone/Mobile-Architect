@@ -1,32 +1,45 @@
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
-import { getAllScans } from "@/lib/api";
-import { ChevronRight, Clock } from "lucide-react";
+import { getHistory, type Scan } from "@/lib/api";
+import { ChevronRight, Clock, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { Scan } from "@shared/schema";
+import { Button } from "@/components/ui/button";
 
 export default function History() {
   const [history, setHistory] = useState<Scan[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    getAllScans()
+  const loadHistory = () => {
+    setLoading(true);
+    getHistory()
       .then(setHistory)
       .catch(console.error)
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadHistory();
   }, []);
 
   if (loading) {
     return (
       <div className="min-h-full flex items-center justify-center p-6">
-        <div className="text-muted-foreground">Loading history...</div>
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <RefreshCw className="w-4 h-4 animate-spin" />
+          <span>Loading history...</span>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="min-h-full flex flex-col bg-background p-6">
-      <h1 className="text-2xl font-bold tracking-tight mb-6">Scan History</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold tracking-tight">Scan History</h1>
+        <Button variant="ghost" size="icon" onClick={loadHistory} className="h-8 w-8">
+          <RefreshCw className="w-4 h-4" />
+        </Button>
+      </div>
       
       {history.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-center">

@@ -1,0 +1,113 @@
+You are an expert full-stack engineer.  
+Refactor and complete my Social Media Exposure Analyzer application according to the following full “Hướng 1” requirements.  
+Do NOT ask questions, just perform all changes automatically and update all frontend + backend code.
+
+========================
+GOAL
+========================
+Transform this project into a polished, fully working full-stack application with:
+- Clean backend architecture
+- Stable API endpoints
+- Real data persistence (JSON storage)
+- Improved risk scoring engine
+- Improved findings extraction
+- PDF report generation
+- Clean and organized frontend integration
+
+========================
+BACKEND TASKS
+========================
+1. Re-organize backend folder structure:
+
+backend/
+   server.js
+   routes/
+      analysisRoutes.js
+      historyRoutes.js
+      reportRoutes.js
+   services/
+      analysisService.js
+      riskEngine.js
+      dataService.js
+      reportService.js
+   data/
+      history.json
+   utils/
+      pdfTemplate.js
+
+2. Improve API endpoints:
+
+POST /api/analyze  
+Return:  
+{
+   riskScore,
+   leaks,
+   findings: {
+       phones,
+       emails,
+       faces,
+       gps
+   },
+   recommendations
+}
+
+GET /api/history  
+Return all saved history.
+
+GET /api/report/:id  
+Generate a clean PDF report using a styled template.
+
+3. Implement improved Risk Score Engine:
+- phones.length * 15
+- emails.length * 15
+- faces * 5
+- gps ? +25 : +0
+- cap at 100
+
+4. Improve findings extraction:
+- Phone detection RegExp: /(0|\\+84)[0-9]{8,10}/g
+- Email RegExp
+- Simulated face count (0–4)
+- Simulated GPS leak (null or random city)
+
+5. Improve recommendations:
+Generate suggestions based on findings.
+
+6. Clean and optimize server.js:
+- Use correct Express routing
+- Enable CORS
+- Add appropriate error handling
+- Ensure JSON body parsing
+- Ensure backend is compatible with Replit hosting
+
+========================
+FRONTEND TASKS
+========================
+1. Replace all mock data with real API calls to backend.
+2. Ensure the following pages work correctly:
+   - Overview
+   - Findings
+   - Actions
+   - History (load from database)
+   - PDF report download
+3. Improve UI:
+   - Clean cards
+   - Better labels for leaks
+   - Better risk score display
+4. Remove unused mock logic files.
+
+========================
+GENERAL TASKS
+========================
+- Clean unused files
+- Improve folder organization
+- Make sure everything builds and runs correctly
+- Provide a short summary of changes after completing
+
+========================
+IMPORTANT RULES
+========================
+- Do NOT ask follow-up questions
+- Modify any file necessary
+- Implement everything automatically
+- Make the app fully functional and stable

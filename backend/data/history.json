@@ -1,0 +1,46 @@
+[
+  {
+    "id": "mit0swu4vepcrn4",
+    "platform": "instagram",
+    "username": "testuser",
+    "profileUrl": "instagram.com/testuser",
+    "avatarUrl": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop",
+    "riskScore": 100,
+    "riskLevel": "Critical",
+    "stats": {
+      "posts": 360,
+      "followers": 3988,
+      "following": 993
+    },
+    "leaks": [
+      "2 phone number(s) exposed",
+      "2 email address(es) exposed",
+      "3 face(s) detected in photos",
+      "Location data exposed: Miami, FL (25.7617° N, 80.1918° W)"
+    ],
+    "findings": {
+      "phones": [
+        "+1 (555) 012-3456",
+        "0901234567"
+      ],
+      "emails": [
+        "john.doe@email.com",
+        "backup@gmail.com"
+      ],
+      "faces": 3,
+      "gps": "Miami, FL (25.7617° N, 80.1918° W)"
+    },
+    "recommendations": [
+      "Remove phone numbers from public bio and posts immediately.",
+      "Use a business phone or virtual number for public contact.",
+      "Hide email addresses from public view.",
+      "Create a separate public email for social media contacts.",
+      "Review photos for identifiable faces, especially of minors.",
+      "Consider blurring faces in public posts.",
+      "Disable location services for your camera app.",
+      "Remove EXIF metadata before posting photos.",
+      "Avoid posting photos that reveal your home location."
+    ],
+    "scannedAt": "2025-12-05T15:29:20.188Z"
+  }
+]
